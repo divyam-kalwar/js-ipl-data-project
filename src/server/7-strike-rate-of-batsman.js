@@ -1,61 +1,51 @@
 // Find the strike rate of a batsman for each season
 
 function strikeRate(matches, deliveries) {
-    const batsmanStats = {};
-    const matchSeason = {};
-
     if (!Array.isArray(matches) || !Array.isArray(deliveries)) {
         throw new TypeError("Input must be array");
     }
 
-    // Map seasons to match IDs
-    for (const match of matches) {
-        if (!matchSeason[match.season]) {
-            matchSeason[match.season] = [];
-        }
-        matchSeason[match.season].push(Number(match.id));
-    }
+    // Map each match ID to its season
+    const matchSeason = matches.reduce((acc, match) => {
+        acc[Number(match.id)] = Number(match.season);
+        return acc;
+    }, {});
 
-    // Calculate runs and balls faced
-    for (const delivery of deliveries) {
+    // Calculate runs and balls faced for each batsman per season
+    const batsmanStats = deliveries.reduce((acc, delivery) => {
+        const season = matchSeason[Number(delivery.match_id)];
+
+        if (season === undefined) {
+            return acc;
+        }
+
         const batsman = delivery.batsman;
         const runs = Number(delivery.batsman_runs || 0);
 
-        for (const season in matchSeason) {
-            if (matchSeason[season].includes(Number(delivery.match_id))) {
-                if (!batsmanStats[season]) {
-                    batsmanStats[season] = {};
-                }
+        acc[season] ??= {};
+        acc[season][batsman] ??= { runs: 0, balls: 0 };
 
-                if (!batsmanStats[season][batsman]) {
-                    batsmanStats[season][batsman] = { runs: 0, balls: 0 };
-                }
+        acc[season][batsman].runs += runs;
 
-                batsmanStats[season][batsman].runs += runs;
-
-                if (Number(delivery.wide_runs || 0) === 0) {
-                    batsmanStats[season][batsman].balls++;
-                }
-            }
+        if (Number(delivery.wide_runs || 0) === 0) {
+            acc[season][batsman].balls++;
         }
-    }
 
-    // Calculate strike rate
-    const strikeRateOfBatsman = {};
+        return acc;
+    }, {});
 
-    for (const season in batsmanStats) {
-        strikeRateOfBatsman[season] = {};
-
-        for (const batsman in batsmanStats[season]) {
-            const stats = batsmanStats[season][batsman];
-
-            strikeRateOfBatsman[season][batsman] = stats.balls > 0
+    // Calculate strike rate for each batsman
+    return Object.entries(batsmanStats).reduce((result, [season, batsmen]) => {
+        result[season] = Object.entries(batsmen).reduce((seasonResult, [batsman, stats]) => {
+            seasonResult[batsman] = stats.balls > 0
                 ? Number(((stats.runs / stats.balls) * 100).toFixed(2))
                 : 0;
-        }
-    }
 
-    return strikeRateOfBatsman;
+            return seasonResult;
+        }, {});
+
+        return result;
+    }, {});
 }
 
 module.exports = strikeRate;
