@@ -34,6 +34,7 @@ function strikeRate(matches, deliveries) {
         return acc;
     }, {});
 
+
     // Calculate strike rate for each batsman
     return Object.entries(batsmanStats).reduce((result, [season, batsmen]) => {
         result[season] = Object.entries(batsmen).reduce((seasonResult, [batsman, stats]) => {
@@ -43,9 +44,8 @@ function strikeRate(matches, deliveries) {
 
             return seasonResult;
         }, {});
-
         return result;
-    }, {});
+    }, {});      
 }
 
 module.exports = strikeRate;
