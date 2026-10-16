@@ -1,15 +1,10 @@
-
- // Find the players with the highest number of Player of the Match awards per season
-
 function highestPlayerOfMatch(matches) {
-    // Checks if matches is object
     if (!Array.isArray(matches)) {
         throw new TypeError("Input must be an array");
     }
 
-    const playerOfMatch = {};
-
-    for (const match of matches) {
+    // Count awards per season and player
+    const playerOfMatch = matches.reduce((acc, match) => {
         if (!match || typeof match !== "object" || Array.isArray(match)) {
             throw new TypeError("Each match must be an object");
         }
@@ -17,47 +12,32 @@ function highestPlayerOfMatch(matches) {
         const season = Number(match.season);
         const player = match.player_of_match;
 
-        // Skip records without a valid season or award winner
         if (!Number.isFinite(season) || !player) {
-            continue;
+            return acc;
         }
 
-        // Initialize the season and player's award count
-        if (!playerOfMatch[season]) {
-            playerOfMatch[season] = {};
-        }
+        acc[season] ??= {};
+        acc[season][player] ??= 0;
+        acc[season][player]++;
 
-        if (!playerOfMatch[season][player]) {
-            playerOfMatch[season][player] = 0;
-        }
+        return acc;
+    }, {});
 
-        playerOfMatch[season][player]++;
-    }
+    // Find the highest award count per season
+    return Object.entries(playerOfMatch).reduce((result, [season, players]) => {
+        const highestCount = Math.max(...Object.values(players));
 
-    // Find the highest award count for each season
-    for (const season in playerOfMatch) {
-        let highestCount = 0;
-        let topPlayers = [];
+        const topPlayers = Object.entries(players)
+            .filter(([player, count]) => count === highestCount)
+            .map(([player]) => player);
 
-        for (const player in playerOfMatch[season]) {
-            const count = playerOfMatch[season][player];
-
-            if (count > highestCount) {
-                highestCount = count;
-                topPlayers = [player];
-            } else if (count === highestCount) {
-                // Include players tied for the highest count
-                topPlayers.push(player);
-            }
-        }
-
-        playerOfMatch[season] = {
+        result[season] = {
             players: topPlayers,
             awards: highestCount
         };
-    }
 
-    return playerOfMatch;
+        return result;
+    }, {});
 }
 
 module.exports = highestPlayerOfMatch;
