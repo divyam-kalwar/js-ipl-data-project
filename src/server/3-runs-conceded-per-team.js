@@ -1,9 +1,6 @@
 // Extra runs conceded per team in the year 2016
 
-function concededRunsPerTeam(matches, deliveries){
-    const concededRuns = {};
-    const matchIds2016 = [];
-
+function concededRunsPerTeam(matches, deliveries){    
     // Checks if match is object
     if(!Array.isArray(matches)){
         throw new TypeError("Input must be array");
@@ -14,21 +11,17 @@ function concededRunsPerTeam(matches, deliveries){
     }
 
     // Collecting the Id's of the matches played in 2016
-    for(const match of matches){
-
+    const matchIds2016 = matches.filter(match => {
         // Checks if match is object
         if (!match || typeof match !== "object") {
             throw new TypeError("Each match must be an object");
         }
-
-        if(Number(match.season) === 2016){
-            matchIds2016.push(Number(match.id));
-        }
-    }
+        return Number(match.season) === 2016;
+    })
+    .map(match => Number(match.id));
 
     // Process the deliveries that belongs to season 2016
-    for (const delivery of deliveries) {
-
+    const concededRuns = deliveries.reduce((acc, delivery) => {
         // Checks if match is object
         if (!delivery || typeof delivery !== "object") {
             throw new TypeError("Each match must be an object");
@@ -36,10 +29,10 @@ function concededRunsPerTeam(matches, deliveries){
 
         // Skips the deliveries from outside the season 2016
         if(!matchIds2016.includes(Number(delivery.match_id))){
-            continue;
+            return acc;
         }
 
-        // Calculate extras conceded from current deliveries
+        // Calculate extras
         const extras =
             Number(delivery.wide_runs || 0) +
             Number(delivery.noball_runs || 0) +
@@ -47,16 +40,18 @@ function concededRunsPerTeam(matches, deliveries){
             Number(delivery.legbye_runs || 0) +
             Number(delivery.penalty_runs || 0);
         
-        // Fetch the bowling team 
+        // Updates the bowling team's total
         const team = delivery.bowling_team;
 
         // Add the extras to the concededRuns
-        if (!concededRuns[team]) {
-            concededRuns[team] = extras;
+        if (!acc[team]) {
+            acc[team] = extras;
         } else {
-            concededRuns[team] += extras;
+            acc[team] += extras;
         }
-    }
+    
+        return acc;
+    }, {});
     return concededRuns;
 }
 
