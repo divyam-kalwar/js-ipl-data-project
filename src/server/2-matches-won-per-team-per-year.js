@@ -1,14 +1,14 @@
 // Number of matches won per team per year in IPL.
 
-function matchesWonPerYear(data){
+function matchesWonPerYear(matches){
     // Checks if input is array
-    if(!Array.isArray(data)){
+    if(!Array.isArray(matches)){
         throw new TypeError('Input type must be array');
     }
 
     const matchWonPerTeam = {};
 
-    for(const match of data){
+    return matches.reduce((matchWonPerTeam, match) => {
         // Check if match is object
         if(!match || typeof match !== 'object'){
             throw new TypeError('Match is not an object');
@@ -18,7 +18,7 @@ function matchesWonPerYear(data){
 
         // Skip matches with no winner
         if (winnerTeam === "") {
-            continue;
+            return matchWonPerTeam;
         }
 
         // Check for valid winner
@@ -26,13 +26,10 @@ function matchesWonPerYear(data){
             throw new Error("Match is missing valid season");
         }
 
-        if(!matchWonPerTeam[winnerTeam]){
-            matchWonPerTeam[winnerTeam] = 1;
-        } else {
-            matchWonPerTeam[winnerTeam]++;
-        }
-    }
-    return matchWonPerTeam;
+        matchWonPerTeam[winnerTeam] = (matchWonPerTeam[winnerTeam] || 0) + 1;
+
+        return matchWonPerTeam; 
+    }, {});
 }
 
 module.exports = matchesWonPerYear;
