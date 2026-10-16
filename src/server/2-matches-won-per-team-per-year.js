@@ -6,8 +6,6 @@ function matchesWonPerYear(matches){
         throw new TypeError('Input type must be array');
     }
 
-    const matchWonPerTeam = {};
-
     return matches.reduce((matchWonPerTeam, match) => {
         // Check if match is object
         if(!match || typeof match !== 'object'){
