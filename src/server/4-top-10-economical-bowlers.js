@@ -1,10 +1,6 @@
 // Top 10 economical bowlers in the year 2015
 
 function topEconomicalBowlers(matches,deliveries){
-    const top10Bowlers = [];
-    const bowlerStats = {}
-    const matchId2015 = [];
-
     // Checks if match is object
     if(!Array.isArray(matches)){
         throw new TypeError("Input must be array");
@@ -15,19 +11,24 @@ function topEconomicalBowlers(matches,deliveries){
     }
 
     // Get match Id's of year 2015
-    for(const match of matches){
-        if(Number(match.season)===2015){
-            matchId2015.push(Number(match.id));
+    const matchId2015 = matches.filter(match => {
+        if(!match || typeof match !== 'object'){
+            throw new TypeError("Each match must be an object");
         }
-    }
+        return Number(match.season) === 2015;
+    })
+    .map(match => Number(match.id));
 
     // Calculate the legal balls and total conceded runs per bowler
-    for(const delivery of deliveries){
-        if(!matchId2015.includes(Number(delivery.match_id))){
-            continue;
+    const bowlerStats = deliveries.reduce((acc, delivery) => {
+        if(!delivery || typeof delivery !== 'object'){
+            throw new TypeError("Each match must be an object");
         }
-        const bowler = delivery.bowler;
 
+        if(!matchId2015.includes(Number(delivery.match_id))){
+            return acc;
+        }
+        
         // Total runs bowler gave excluding byes, legbye, penalty
         const runsConceded =
             Number(delivery.total_runs || 0) -
@@ -40,36 +41,42 @@ function topEconomicalBowlers(matches,deliveries){
             Number(delivery.wide_runs || 0) === 0 && 
             Number(delivery.noball_runs || 0) === 0;
 
-        if(!bowlerStats[bowler]){
-            bowlerStats[bowler] = {
+        const bowler = delivery.bowler;
+
+        if(!acc[bowler]){
+            acc[bowler] = {
                 runs: 0,
                 legalBalls: 0
             };
         }
-        bowlerStats[bowler].runs += runsConceded;
+        acc[bowler].runs += runsConceded;
 
         if(isLegalBall){
-            bowlerStats[bowler].legalBalls++;
+            acc[bowler].legalBalls++;
         }
-    }
+
+        return acc;
+    },{});
 
     // Calcuate economy of each bowler
-    for(const bowler in bowlerStats){
+    const top10Bowlers = Object.keys(bowlerStats).reduce((acc, bowler)=>{
         const stats = bowlerStats[bowler];
-        
+
         // Skip the bowler with no legal deliveries
         if(stats.legalBalls == 0){
-            continue;
+            return acc;
         }
 
         const overs = stats.legalBalls / 6;
         const economy = stats.runs / overs;
 
-        top10Bowlers.push({
-            bowler: bowler,
+        acc.push({
+            bowler,
             economy: Number(economy.toFixed(2))
         });
-    }
+    
+        return acc;
+    },[]);
 
     top10Bowlers.sort((a, b) => a.economy - b.economy);
 
